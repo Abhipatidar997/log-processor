@@ -1,0 +1,25 @@
+#include <thread>
+#include <signal.h>
+#include <iostream>
+#include "LogReader.h"
+#include "LogProcessor.h"
+#include "ThreadSafeQueue.h"
+
+void signalHandler(int) {
+    std::cout << "\nGraceful shutdown\n";
+    exit(0);
+}
+
+int main() {
+    signal(SIGINT, signalHandler);
+
+    ThreadSafeQueue<std::string> queue;
+
+    std::thread reader{ LogReader("app.log", queue) };
+    std::thread processor{ LogProcessor(queue) };
+
+    reader.join();
+    processor.join();
+
+    return 0;
+}
